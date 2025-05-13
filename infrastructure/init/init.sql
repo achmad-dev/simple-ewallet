@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 --- for storing e-wallets
 CREATE TABLE IF NOT EXISTS ewallets (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid() UNIQUE,
-    owner_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    owner_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE UNIQUE, -- Added UNIQUE constraint
     balance NUMERIC(19, 4) NOT NULL DEFAULT 0.00, -- Assuming 4 decimal places for precision
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now()

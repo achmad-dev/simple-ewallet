@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/achmad-dev/simple-ewallet/internal/pkg"
@@ -27,6 +28,11 @@ func AuthMiddleware(secret string, userService service.UserService) fiber.Handle
 		if err != nil {
 			return pkg.ErrorResponse(c, fiber.StatusUnauthorized, "Unauthorized")
 		}
+		if claims.UserId == "" {
+			return pkg.ErrorResponse(c, fiber.StatusUnauthorized, "Unauthorized")
+		}
+
+		fmt.Printf("claims: %v\n", claims.UserId)
 
 		user, err := userService.GetUserByID(c.Context(), claims.UserId)
 		if err != nil {

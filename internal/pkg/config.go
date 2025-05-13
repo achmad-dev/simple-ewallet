@@ -36,7 +36,7 @@ func NewConfig(path string) (*Config, error) {
 		Port:          getEnv("PORT", "3000"),
 		JwtSecret:     getEnv("JWT_SECRET", "hmm"),
 		DbHost:        getEnv("DB_HOST", "localhost"),
-		DbPort:        getEnv("DB_PORT", "5432"),
+		DbPort:        getEnv("DB_PORT", "5438"),
 		DbUser:        getEnv("DB_USER", "postgres"),
 		DbPassword:    getEnv("DB_PASSWORD", "postgres"),
 		DbName:        getEnv("DB_NAME", "postgres"),

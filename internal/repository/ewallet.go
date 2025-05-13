@@ -23,9 +23,9 @@ type eWalletRepository struct {
 // AddEWallet implements EWalletRepository.
 func (e *eWalletRepository) AddEWallet(userID string) error {
 	exec := `
-		INSERT INTO ewallets (user_id, balance, created_at, updated_at)
+		INSERT INTO ewallets (owner_id, balance, created_at, updated_at)
 		VALUES ($1, 0, NOW(), NOW())
-		ON CONFLICT (user_id) DO NOTHING
+		ON CONFLICT (owner_id) DO NOTHING
 	`
 	_, err := e.sqlx.Exec(exec, userID)
 	if err != nil {
@@ -37,12 +37,16 @@ func (e *eWalletRepository) AddEWallet(userID string) error {
 // GetEWallet implements EWalletRepository.
 func (e *eWalletRepository) GetEWallet(userID string) (*domain.EWallet, error) {
 	exec := `
-		SELECT id, user_id, balance, created_at, updated_at
+		SELECT id, owner_id, balance
 		FROM ewallets
-		WHERE user_id = $1
+		WHERE owner_id = $1
 	`
 	ewallet := &domain.EWallet{}
-	err := e.sqlx.Get(ewallet, exec, userID)
+	err := e.sqlx.QueryRow(exec, userID).Scan(
+		&ewallet.ID,
+		&ewallet.OwnerID,
+		&ewallet.Balance,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +67,7 @@ func (e *eWalletRepository) UpdateEWallet(userID string, eWallet *domain.EWallet
 	}()
 
 	var currentBalance float64
-	err = tx.Get(&currentBalance, "SELECT balance FROM ewallets WHERE user_id = $1 FOR UPDATE", userID)
+	err = tx.Get(&currentBalance, "SELECT balance FROM ewallets WHERE owner_id = $1 FOR UPDATE", userID)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -81,7 +85,7 @@ func (e *eWalletRepository) UpdateEWallet(userID string, eWallet *domain.EWallet
 	}
 
 	_, err = tx.Exec(
-		"UPDATE ewallets SET balance = $1, updated_at = NOW() WHERE user_id = $2",
+		"UPDATE ewallets SET balance = $1, updated_at = NOW() WHERE owner_id = $2",
 		newBalance, userID,
 	)
 	if err != nil {

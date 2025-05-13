@@ -1,0 +1,5 @@
+## ignore tmp files
+tmp/
+
+## ignore log files
+*.log
