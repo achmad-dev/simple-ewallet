@@ -16,7 +16,7 @@ import (
 type UserRepo interface {
 	GetUserByID(ctx context.Context, id string) (*domain.User, error)
 	GetUserByName(ctx context.Context, username string) (*domain.User, error)
-	CreateUser(ctx context.Context, newUser *domain.User) error
+	CreateUser(ctx context.Context, newUser *domain.User) (string, error)
 }
 
 // user repository implementation
@@ -25,17 +25,18 @@ type userRepositoryImpl struct {
 }
 
 // CreateUser implements UserRepo.
-func (u *userRepositoryImpl) CreateUser(ctx context.Context, newUser *domain.User) error {
-	query := `INSERT INTO users (username, password, email, created_at, updated_at) VALUES ($1, $2, $3)`
-	_, err := u.sqlx.ExecContext(ctx, query,
+func (u *userRepositoryImpl) CreateUser(ctx context.Context, newUser *domain.User) (string, error) {
+	query := `INSERT INTO users (username, password, email, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id`
+	var id string
+	err := u.sqlx.QueryRowContext(ctx, query,
 		newUser.Username,
 		newUser.Password,
 		newUser.Email,
-	)
+	).Scan(&id)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return id, nil
 }
 
 // GetUserByName implements UserRepo.

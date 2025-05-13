@@ -25,10 +25,11 @@ type UserService interface {
 
 // user service implementation
 type userServiceImpl struct {
-	userRepo   repository.UserRepo
-	bcryptUtil pkg.BcryptUtil
-	secret     string
-	log        *logrus.Logger
+	userRepo    repository.UserRepo
+	ewalletRepo repository.EWalletRepository
+	bcryptUtil  pkg.BcryptUtil
+	secret      string
+	log         *logrus.Logger
 }
 
 // Signup implements UserService.
@@ -51,7 +52,14 @@ func (u *userServiceImpl) Signup(ctx context.Context, userSignup dto.UserSignupD
 		Password: hashedPassword,
 	}
 
-	err = u.userRepo.CreateUser(ctx, newUser)
+	id, err := u.userRepo.CreateUser(ctx, newUser)
+	if err != nil {
+		u.log.Error(err)
+		return nil, errors.New("something went wrong")
+	}
+
+	// create ewallet for user
+	err = u.ewalletRepo.AddEWallet(id)
 	if err != nil {
 		u.log.Error(err)
 		return nil, errors.New("something went wrong")
@@ -105,6 +113,6 @@ func (u *userServiceImpl) SignIn(ctx context.Context, username string, password 
 }
 
 // NewUserService creates a new user service
-func NewUserService(userRepo repository.UserRepo, bcryptUtil pkg.BcryptUtil, secret string, log *logrus.Logger) UserService {
-	return &userServiceImpl{userRepo: userRepo, bcryptUtil: bcryptUtil, secret: secret, log: log}
+func NewUserService(userRepo repository.UserRepo, ewalletRepo repository.EWalletRepository, bcryptUtil pkg.BcryptUtil, secret string, log *logrus.Logger) UserService {
+	return &userServiceImpl{userRepo: userRepo, ewalletRepo: ewalletRepo, bcryptUtil: bcryptUtil, secret: secret, log: log}
 }
